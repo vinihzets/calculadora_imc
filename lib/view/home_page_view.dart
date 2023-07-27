@@ -1,5 +1,4 @@
-import 'dart:developer';
-
+import 'package:calculadora_imc/models/pessoa_model.dart';
 import 'package:flutter/material.dart';
 
 class HomePageView extends StatefulWidget {
@@ -12,7 +11,7 @@ class HomePageView extends StatefulWidget {
 class _HomePageViewState extends State<HomePageView> {
   late TextEditingController pesoController;
   late TextEditingController alturaController;
-  double? imc;
+  PessoaModel? pessoa;
 
   @override
   void initState() {
@@ -49,13 +48,13 @@ class _HomePageViewState extends State<HomePageView> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(information)));
 
-      return imc;
+      return PessoaModel(
+          peso: peso.toString(), altura: altura.toString(), imc: imc);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    inspect(imc);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calculadora IMC'),
@@ -86,9 +85,12 @@ class _HomePageViewState extends State<HomePageView> {
             ),
           ),
           FilledButton(
-              onPressed: () {
-                imc = calculate(double.parse(pesoController.text),
+              onPressed: () async {
+                pessoa = await calculate(double.parse(pesoController.text),
                     double.parse(alturaController.text), context);
+
+                pesoController.clear();
+                alturaController.clear();
               },
               child: const Text('Calcular')),
           Expanded(
@@ -98,20 +100,22 @@ class _HomePageViewState extends State<HomePageView> {
               children: [
                 Column(
                   children: [
-                    Text('Peso'),
-                    Text(pesoController.text),
+                    const Text('Peso'),
+                    pessoa == null ? Container() : Text(pessoa!.peso),
                   ],
                 ),
                 Column(
                   children: [
-                    Text('Altura'),
-                    Text(alturaController.text),
+                    const Text('Altura'),
+                    pessoa == null ? Container() : Text(pessoa!.altura),
                   ],
                 ),
                 Column(
                   children: [
-                    Text('IMC'),
-                    imc == null ? Container() : Text(imc!.toStringAsFixed(2)),
+                    const Text('IMC'),
+                    pessoa == null
+                        ? Container()
+                        : Text(pessoa!.imc.toStringAsFixed(2)),
                   ],
                 ),
               ],
