@@ -1,7 +1,11 @@
+import 'package:calculadora_imc/service/cache/cache_hive.dart';
 import 'package:calculadora_imc/view/home_page_view.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await CacheHive.build();
+
   runApp(const MyApp());
 }
 

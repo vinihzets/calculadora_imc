@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:calculadora_imc/models/pessoa_model.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
 class HomePageView extends StatefulWidget {
   const HomePageView({super.key});
@@ -13,15 +16,30 @@ class _HomePageViewState extends State<HomePageView> {
   late TextEditingController alturaController;
   PessoaModel? pessoa;
 
+  late List<PessoaModel> listPessoas;
+
   @override
   void initState() {
     pesoController = TextEditingController();
     alturaController = TextEditingController();
 
+    listPessoas = [];
+
+    fetchPessoas();
     super.initState();
   }
 
-  calculate(double peso, double altura, BuildContext context) {
+  fetchPessoas() async {
+    final box = Hive.box('myBox');
+
+    final List list = box.values.toList();
+
+    for (PessoaModel i in list) {
+      listPessoas.add(i);
+    }
+  }
+
+  calculate(double peso, double altura, BuildContext context) async {
     String information = '';
     if (peso > 0 && altura > 0) {
       final double imc = peso / (altura * altura);
@@ -48,13 +66,19 @@ class _HomePageViewState extends State<HomePageView> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(information)));
 
-      return PessoaModel(
+      final pessoa = PessoaModel(
           peso: peso.toString(), altura: altura.toString(), imc: imc);
+
+      listPessoas.add(pessoa);
+
+      final box = Hive.box('myBox');
+      box.add(pessoa);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    inspect(listPessoas);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calculadora IMC'),
@@ -94,31 +118,37 @@ class _HomePageViewState extends State<HomePageView> {
               },
               child: const Text('Calcular')),
           Expanded(
-            child: GridView(
+            child: GridView.builder(
+              itemCount: listPessoas.length,
+              itemBuilder: (context, index) {
+                final pessoa = listPessoas[index];
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        const Text('Peso'),
+                        Text(pessoa.peso),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('Altura'),
+                        Text(pessoa.altura),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('IMC'),
+                        Text(pessoa.imc.toStringAsFixed(2)),
+                      ],
+                    ),
+                  ],
+                );
+              },
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3),
-              children: [
-                Column(
-                  children: [
-                    const Text('Peso'),
-                    pessoa == null ? Container() : Text(pessoa!.peso),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('Altura'),
-                    pessoa == null ? Container() : Text(pessoa!.altura),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('IMC'),
-                    pessoa == null
-                        ? Container()
-                        : Text(pessoa!.imc.toStringAsFixed(2)),
-                  ],
-                ),
-              ],
+                  crossAxisCount: 1),
             ),
           )
         ],
